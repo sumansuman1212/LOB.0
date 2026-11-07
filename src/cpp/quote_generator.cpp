@@ -11,15 +11,6 @@
 
 namespace mm {
 
-namespace {
-
-template <typename T>
-constexpr const T& clamp_val(const T& v, const T& lo, const T& hi) {
-    return (v < lo) ? lo : (hi < v) ? hi : v;
-}
-
-} // namespace
-
 QuoteGenerator::QuoteGenerator(int64_t  tick_size,
                                uint64_t max_order_size,
                                int64_t  max_inventory,
@@ -43,7 +34,7 @@ QuoteParams QuoteGenerator::generate(const float*      obs,
     // 2. Continuous action to tick offset translation (Req 5.3)
     float delta_bid = std::max(0.0f, action.delta_bid);
     float delta_ask = std::max(0.0f, action.delta_ask);
-    float size_frac = clamp_val(action.size_frac, 0.01f, 1.0f);
+    float size_frac = std::clamp(action.size_frac, 0.01f, 1.0f);
 
     int64_t bid_offset = static_cast<int64_t>(std::round(delta_bid * static_cast<float>(tick_size_)));
     int64_t ask_offset = static_cast<int64_t>(std::round(delta_ask * static_cast<float>(tick_size_)));
@@ -71,12 +62,12 @@ QuoteParams QuoteGenerator::generate(const float*      obs,
     }
 
     // 5. Scale quote sizes to [1, max_order_size] (Req 5.4)
-    uint64_t bid_qty = clamp_val(
+    uint64_t bid_qty = std::clamp<uint64_t>(
         static_cast<uint64_t>(std::round(size_frac * static_cast<float>(max_order_size_))),
         1ULL,
         max_order_size_
     );
-    uint64_t ask_qty = clamp_val(
+    uint64_t ask_qty = std::clamp<uint64_t>(
         static_cast<uint64_t>(std::round(size_frac * static_cast<float>(max_order_size_))),
         1ULL,
         max_order_size_

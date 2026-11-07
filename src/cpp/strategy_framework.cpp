@@ -62,9 +62,9 @@ StrategyFramework::StrategyFramework(StrategyConfig cfg)
     : config_(std::move(cfg)),
       lob_(config_.tick_size),
       features_(config_.max_position),
+      active_policy_(&fallback_policy_),
       quoter_(config_.tick_size, config_.max_order_size, config_.max_position, config_.latency_budget_ns),
-      gateway_(config_.max_position),
-      active_policy_(&fallback_policy_) {
+      gateway_(config_.max_position) {
     latency_samples_.reserve(10000);
 
     if (!config_.model_path.empty()) {

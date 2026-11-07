@@ -18,6 +18,28 @@ endif()
 
 # libtorch (optional — if present, enables neural inference via USE_TORCH)
 find_package(Torch QUIET)
+if(NOT Torch_FOUND)
+  if(EXISTS "/opt/libtorch/share/cmake/Torch/TorchConfig.cmake")
+    list(APPEND CMAKE_PREFIX_PATH "/opt/libtorch")
+    find_package(Torch QUIET)
+  endif()
+endif()
+if(NOT Torch_FOUND)
+  find_package(Python3 COMPONENTS Interpreter QUIET)
+  if(Python3_FOUND)
+    execute_process(
+      COMMAND "${Python3_EXECUTABLE}" -c "import torch; print(torch.utils.cmake_prefix_path)"
+      OUTPUT_VARIABLE PYTHON_TORCH_PATH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET
+    )
+    if(PYTHON_TORCH_PATH)
+      list(APPEND CMAKE_PREFIX_PATH "${PYTHON_TORCH_PATH}")
+      find_package(Torch QUIET)
+    endif()
+  endif()
+endif()
+
 if(Torch_FOUND)
   message(STATUS "Torch found: ${Torch_VERSION}")
   add_compile_definitions(USE_TORCH)

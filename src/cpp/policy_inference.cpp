@@ -172,11 +172,6 @@ std::string PolicyInference::compute_sha256(const std::string& filepath) noexcep
     return oss.str();
 }
 
-template <typename T>
-constexpr const T& clamp_val(const T& v, const T& lo, const T& hi) {
-    return (v < lo) ? lo : (hi < v) ? hi : v;
-}
-
 // ---------------------------------------------------------------------------
 // SimplifiedPolicyInference Implementation (Req 9.4)
 // ---------------------------------------------------------------------------
@@ -204,10 +199,10 @@ QuoteAction SimplifiedPolicyInference::act(const float* obs) noexcept {
     // and tighten bid distance (delta_bid lower) to encourage buying.
     float delta_bid = 1.0f + 1.5f * std::max(0.0f, inventory_skew) - 0.5f * std::max(0.0f, -inventory_skew) - 0.3f * ofi_l1 + 0.2f * std::max(0.0f, vol_regime);
     float delta_ask = 1.0f + 1.5f * std::max(0.0f, -inventory_skew) - 0.5f * std::max(0.0f, inventory_skew) + 0.3f * ofi_l1 + 0.2f * std::max(0.0f, vol_regime);
-    float size_frac = clamp_val(0.2f * (1.0f - 0.5f * inventory_urgency), 0.05f, 1.0f);
+    float size_frac = std::clamp(0.2f * (1.0f - 0.5f * inventory_urgency), 0.05f, 1.0f);
 
-    delta_bid = clamp_val(delta_bid, 0.5f, 20.0f);
-    delta_ask = clamp_val(delta_ask, 0.5f, 20.0f);
+    delta_bid = std::clamp(delta_bid, 0.5f, 20.0f);
+    delta_ask = std::clamp(delta_ask, 0.5f, 20.0f);
 
     return {delta_bid, delta_ask, size_frac};
 }
