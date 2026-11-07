@@ -373,10 +373,10 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 If you use this project in your academic coursework, research, or quantitative portfolio evaluation, please cite it using [`CITATION.cff`](CITATION.cff):
 
 ```bibtex
-@software{saurav_lob0_2026,
-  author = {Saurav},
-  title = {LOB.0: Reinforcement Learning-Driven Adaptive Market Making Engine},
-  year = {2026},
-  url = {https://github.com/sumansuman1212/LOB.0}
+@software{suman_saurabh_lob0_2026,
+  author  = {Suman Saurabh},
+  title   = {{LOB.0}: Reinforcement Learning-Driven Adaptive Market Making Engine},
+  year    = {2026},
+  url     = {https://github.com/sumansuman1212/LOB.0}
 }
 ```

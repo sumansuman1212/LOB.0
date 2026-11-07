@@ -17,3 +17,4 @@ This directory is a designated storage location for offline market-data archives
 
 - Raw tick data files (`*.parquet`, `*.csv`) are ignored by `.gitignore` to prevent committing multi-gigabyte binary archives to Git.
 - In the absence of external market data files, `LobEnv` and `mm_backtest` automatically utilize deterministic synthetic tick generators.
+
