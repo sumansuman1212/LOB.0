@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you reference or use this software in your research or educational work, please cite it as below."
+title: "LOB.0: Reinforcement Learning-Driven Adaptive Market Making Engine"
+authors:
+  - family-names: "Saurav"
+    given-names: "Student Researcher"
+version: 0.1.0
+date-released: 2026-11-07
+url: "https://github.com/sumansuman1212/LOB.0"
+repository-code: "https://github.com/sumansuman1212/LOB.0"
+keywords:
+  - "market microstructure"
+  - "limit order book"
+  - "reinforcement learning"
+  - "proximal policy optimization"
+  - "algorithmic trading"
+  - "high-frequency trading"
+  - "quantitative finance"
+  - "systems programming"
+  - "C++17"
+abstract: >-
+  LOB.0 is an educational and research-oriented quantitative trading system combining
+  an ultra-low-latency C++17 limit order book execution engine with a Python (PyTorch)
+  reinforcement learning harness. The engine evaluates order-flow imbalance (OFI),
+  Welford rolling realized volatility, and inventory risk to generate adaptive bid/ask
+  quotes with hard risk guardrails.
+license: "MIT"
+

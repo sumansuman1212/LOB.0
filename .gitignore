@@ -1,0 +1,59 @@
+# ===========================================================================
+# LOB.0 Git Ignore Rules
+# ===========================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C / C++ build outputs
+build/
+cmake-build-*/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+out.txt
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing and coverage caches
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# Local IDE and editor configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary experiment checkpoints (preserve production ppo_actor.pt)
+models/test_*.pt*
+models/ci_*.pt*
+models/*_checkpoint.pt*
+!models/ppo_actor.pt
+!models/ppo_actor.pt.sha256
+!models/.gitkeep
+
+# Temporary log and scratch files
+*.log
+*.tmp
+
+# Market data archives (local historical tick downloads)
+data/*.parquet
+data/*.csv
+!data/.gitkeep
+

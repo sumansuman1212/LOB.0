@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel", "pybind11>=2.11"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "mm_engine"
+version = "0.1.0"
+description = "RL-Driven Adaptive Market Making Engine — Python training harness"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "gymnasium>=0.29",
+    "torch>=2.2",
+    "hypothesis>=6.0",
+    "pandas>=2.0",
+    "pyarrow>=2.0",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-timeout>=2.3",
+]
+
+[tool.setuptools.packages.find]
+where = ["src/python"]
+
+[tool.setuptools.package-dir]
+"" = "src/python"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+

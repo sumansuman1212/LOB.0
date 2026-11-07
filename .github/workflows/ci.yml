@@ -1,0 +1,132 @@
+name: LOB.0 CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  python-tests:
+    name: Python RL Harness Tests (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest hypothesis
+
+      - name: Run unit & property tests (pytest + hypothesis)
+        run: |
+          pytest -v tests/
+
+      - name: Run PPO training step smoke test
+        run: |
+          python test_train_step.py
+
+      - name: Run end-to-end training verification
+        run: |
+          python -m src.python.mm_train --episodes 2 --rollout 128 --batch-size 64 --epochs 2 --output models/ci_actor.pt
+          python -c "
+          import hashlib
+          from pathlib import Path
+          p = Path('models/ci_actor.pt')
+          digest = hashlib.sha256(p.read_bytes()).hexdigest()
+          stored = Path('models/ci_actor.pt.sha256').read_text().strip()
+          assert digest == stored, f'Checksum mismatch: {digest} != {stored}'
+          print('CI Model Checksum Verified:', digest)
+          "
+
+  cpp-tests-linux:
+    name: C++17 Core Build & Tests (Linux GCC)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ wget unzip
+
+      - name: Verify Model Checkpoint SHA-256
+        run: |
+          EXPECTED=$(cat models/ppo_actor.pt.sha256 | tr -d '[:space:]')
+          COMPUTED=$(sha256sum models/ppo_actor.pt | awk '{print $1}')
+          echo "Expected: $EXPECTED"
+          echo "Computed: $COMPUTED"
+          if [ "$COMPUTED" != "$EXPECTED" ]; then
+            echo "Checksum mismatch: $COMPUTED != $EXPECTED"
+            exit 1
+          fi
+          echo "Checkpoint verified: $COMPUTED"
+
+      - name: Configure CMake (Standalone Fallback)
+        run: |
+          cmake -B build-standalone -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Standalone Targets
+        run: |
+          cmake --build build-standalone --target mm_tests mm_backtest verify_native_inference
+
+      - name: Run Standalone C++ Tests
+        run: |
+          ./build-standalone/tests/mm_tests
+          ./build-standalone/src/cpp/verify_native_inference
+
+      - name: Setup Linux CPU LibTorch
+        run: |
+          wget -q -O /tmp/libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.2.2%2Bcpu.zip
+          sudo unzip -q /tmp/libtorch.zip -d /opt
+          sudo rm -f /tmp/libtorch.zip
+
+      - name: Configure CMake with LibTorch
+        run: |
+          cmake -B build-torch -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/opt/libtorch
+
+      - name: Build C++ with LibTorch
+        run: |
+          cmake --build build-torch --target mm_tests mm_backtest verify_native_inference
+
+      - name: Run Native Inference Verification with TorchScript Model
+        run: |
+          export LD_LIBRARY_PATH="/opt/libtorch/lib:${LD_LIBRARY_PATH}"
+          ./build-torch/tests/mm_tests
+          ./build-torch/src/cpp/verify_native_inference
+
+  cpp-build-windows:
+    name: C++17 Core Build & Tests (Windows MSVC)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure CMake (MSVC x64)
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build C++ targets
+        run: |
+          cmake --build build --config Release --target mm_tests mm_backtest verify_native_inference
+
+      - name: Execute C++ test suite
+        run: |
+          .\build\tests\Release\mm_tests.exe
+          .\build\src\cpp\Release\verify_native_inference.exe
