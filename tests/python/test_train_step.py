@@ -1,5 +1,11 @@
 """Smoke test for PPOAgent.train_step() — task 7.2"""
 import math
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
 import torch
 from src.python.ppo_agent import PPOAgent
 

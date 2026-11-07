@@ -5,14 +5,14 @@ cmake_minimum_required(VERSION 3.22)
 # Uses self-contained header CatchShim in include/catch2/catch_test_macros.hpp
 # ---------------------------------------------------------------------------
 add_executable(mm_tests
-    test_placeholder.cpp
-    test_data_models.cpp
-    test_lob_engine.cpp
-    test_feature_pipeline.cpp
-    test_policy_inference.cpp
-    test_quote_generator.cpp
-    test_tick_replayer.cpp
-    test_strategy_framework.cpp
+    cpp/test_placeholder.cpp
+    cpp/test_data_models.cpp
+    cpp/test_lob_engine.cpp
+    cpp/test_feature_pipeline.cpp
+    cpp/test_policy_inference.cpp
+    cpp/test_quote_generator.cpp
+    cpp/test_tick_replayer.cpp
+    cpp/test_strategy_framework.cpp
 )
 
 target_link_libraries(mm_tests

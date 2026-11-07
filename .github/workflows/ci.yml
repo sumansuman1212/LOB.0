@@ -37,7 +37,7 @@ jobs:
 
       - name: Run PPO training step smoke test
         run: |
-          python test_train_step.py
+          python tests/python/test_train_step.py
 
       - name: Run end-to-end training verification
         run: |

@@ -57,3 +57,7 @@ data/*.parquet
 data/*.csv
 !data/.gitkeep
 
+# External / un-related workspaces
+Veil/
+
+
