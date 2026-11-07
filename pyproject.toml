@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel", "pybind11>=2.11"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "mm_engine"
