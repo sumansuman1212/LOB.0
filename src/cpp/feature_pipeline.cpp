@@ -233,8 +233,13 @@ void FeaturePipeline::update(const BookSnapshot& snap,
     //
     // Push a new log-return (log mid / prev_mid) into the circular buffer
     // and compute the z-scored realized vol.
+    // Guard against empty / one-sided book sentinels (INT64_MIN / INT64_MAX)
     // ------------------------------------------------------------------
-    int64_t mid_price_ticks = snap.best_bid > 0 && snap.best_ask > 0
+    bool has_bid = (snap.best_bid > 0) && (snap.best_bid != std::numeric_limits<int64_t>::min());
+    bool has_ask = (snap.best_ask > 0) && (snap.best_ask != std::numeric_limits<int64_t>::max());
+    bool has_two_sided_book = has_bid && has_ask;
+
+    int64_t mid_price_ticks = has_two_sided_book
                                 ? (snap.best_bid + snap.best_ask) / 2
                                 : 0;
 
@@ -259,11 +264,11 @@ void FeaturePipeline::update(const BookSnapshot& snap,
     // (in raw tick units; normalized by spreading over tick_size=1 for now)
     // ------------------------------------------------------------------
     float micro_price_offset = 0.0f;
-    {
+    if (has_two_sided_book) {
         double bid_p = static_cast<double>(snap.best_bid);
         double ask_p = static_cast<double>(snap.best_ask);
         double denom = bid_l1 + ask_l1;  // same as ofi_l1_denom
-        if (denom > kEpsilon && snap.best_bid > 0 && snap.best_ask > 0) {
+        if (denom > kEpsilon) {
             double micro_price = (ask_p * bid_l1 + bid_p * ask_l1) / denom;
             double mid_p       = (bid_p + ask_p) * 0.5;
             double raw_offset  = micro_price - mid_p;
@@ -287,7 +292,7 @@ void FeaturePipeline::update(const BookSnapshot& snap,
     // and grows slowly.  Then we clamp with sanitize().
     // ------------------------------------------------------------------
     float spread_ticks = 0.0f;
-    if (snap.best_ask > 0 && snap.best_bid > 0) {
+    if (has_two_sided_book) {
         int64_t raw_spread = snap.best_ask - snap.best_bid;
         if (raw_spread > 0) {
             // log1p(raw_spread - 1): spread=1 → 0.0, spread=2 → ~0.69, etc.

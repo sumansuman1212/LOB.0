@@ -112,7 +112,18 @@ mm::OrderEvent dict_to_order_event(const py::dict& d) {
     ev.timestamp_ns = d["timestamp_ns"].cast<int64_t>();
     ev.order_id     = d["order_id"].cast<uint64_t>();
     ev.price        = d["price"].cast<int64_t>();
-    ev.qty          = d["qty"].cast<uint32_t>();
+    if (ev.price <= 0) {
+        throw std::invalid_argument("event dict 'price' must be strictly positive");
+    }
+
+    int64_t raw_qty = d["qty"].cast<int64_t>();
+    if (raw_qty <= 0) {
+        throw std::invalid_argument("event dict 'qty' must be strictly positive");
+    }
+    if (raw_qty > static_cast<int64_t>(std::numeric_limits<uint32_t>::max())) {
+        throw std::overflow_error("event dict 'qty' exceeds uint32_t maximum");
+    }
+    ev.qty = static_cast<uint32_t>(raw_qty);
 
     // Parse type string
     std::string type_str = d["type"].cast<std::string>();

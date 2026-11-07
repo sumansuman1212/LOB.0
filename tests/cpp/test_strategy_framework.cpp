@@ -93,3 +93,34 @@ TEST_CASE("StrategyFramework: Shutdown cancels active orders (Req 9.8)", "[strat
     strategy.shutdown();
     REQUIRE_FALSE(strategy.gateway().has_active_quotes());
 }
+
+TEST_CASE("OrderGateway: Cash flow ledger and mark-to-market equity accounting", "[strategy][accounting]") {
+    mm::OrderGateway gateway(100);
+
+    // Initial flat position
+    REQUIRE(gateway.net_position() == 0);
+    REQUIRE(gateway.cash_balance() == 0);
+    REQUIRE(gateway.total_pnl(20000) == 0);
+
+    // Buy 20 @ 20000 -> cash = -400,000, pos = +20
+    gateway.on_fill(20000, 20, mm::Side::Bid);
+    REQUIRE(gateway.net_position() == 20);
+    REQUIRE(gateway.cash_balance() == -400000);
+    // At price 20000, MTM PnL = -400000 + 20*20000 = 0
+    REQUIRE(gateway.total_pnl(20000) == 0);
+    // If mid moves up to 20050, MTM PnL = -400000 + 20*20050 = +1000
+    REQUIRE(gateway.total_pnl(20050) == 1000);
+
+    // Sell 10 @ 20060 -> cash = -400000 + 200600 = -199400, pos = +10
+    gateway.on_fill(20060, 10, mm::Side::Ask);
+    REQUIRE(gateway.net_position() == 10);
+    REQUIRE(gateway.cash_balance() == -199400);
+    // At price 20060, MTM PnL = -199400 + 10*20060 = +1200
+    REQUIRE(gateway.total_pnl(20060) == 1200);
+
+    // Close remaining 10 @ 20040 -> cash = -199400 + 200400 = +1000, pos = 0
+    gateway.on_fill(20040, 10, mm::Side::Ask);
+    REQUIRE(gateway.net_position() == 0);
+    REQUIRE(gateway.cash_balance() == 1000);
+    REQUIRE(gateway.total_pnl(20040) == 1000);
+}

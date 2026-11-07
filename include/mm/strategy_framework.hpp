@@ -52,7 +52,11 @@ public:
 
     int64_t net_position()    const noexcept { return net_position_; }
     int64_t total_volume()    const noexcept { return total_volume_; }
+    int64_t cash_balance()    const noexcept { return realized_pnl_; }
     int64_t realized_pnl()    const noexcept { return realized_pnl_; }
+    int64_t total_pnl(int64_t mark_price) const noexcept {
+        return realized_pnl_ + (net_position_ * mark_price);
+    }
     bool    has_active_quotes() const noexcept { return has_active_quotes_; }
 
     const QuoteParams& active_quote() const noexcept { return active_quote_; }

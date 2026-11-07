@@ -84,3 +84,54 @@ TEST_CASE("feature reset clears rolling and emitted state", "[features][task-4.5
         REQUIRE(value == 0.0f);
     }
 }
+
+TEST_CASE("FeaturePipeline: empty and one-sided book sentinel handling", "[features][sentinel][hardening]") {
+    mm::FeaturePipeline pipeline{100};
+
+    // 1. Completely empty book with sentinels
+    mm::BookSnapshot empty_snap{};
+    empty_snap.timestamp_ns = 1000;
+    empty_snap.best_bid = std::numeric_limits<int64_t>::min();
+    empty_snap.best_ask = std::numeric_limits<int64_t>::max();
+    pipeline.update(empty_snap, 0);
+
+    const auto feats_empty = observe(pipeline);
+    float empty_vals[mm::MarketFeatures::DIM]{};
+    feats_empty.to_array(empty_vals);
+    for (float v : empty_vals) {
+        REQUIRE(std::isfinite(v));
+        REQUIRE(std::abs(v) <= 5.0f);
+    }
+    REQUIRE(feats_empty.spread_ticks == 0.0f);
+    REQUIRE(feats_empty.micro_price_offset == 0.0f);
+
+    // 2. One-sided book: Bid only (Ask empty / sentinel)
+    mm::BookSnapshot bid_only_snap = make_snapshot(2000, 25000, std::numeric_limits<int64_t>::max(), 50, 0);
+    bid_only_snap.best_ask = std::numeric_limits<int64_t>::max();
+    pipeline.update(bid_only_snap, 10);
+
+    const auto feats_bid_only = observe(pipeline);
+    float bid_vals[mm::MarketFeatures::DIM]{};
+    feats_bid_only.to_array(bid_vals);
+    for (float v : bid_vals) {
+        REQUIRE(std::isfinite(v));
+        REQUIRE(std::abs(v) <= 5.0f);
+    }
+    REQUIRE(feats_bid_only.spread_ticks == 0.0f);
+    REQUIRE(feats_bid_only.micro_price_offset == 0.0f);
+
+    // 3. One-sided book: Ask only (Bid empty / sentinel)
+    mm::BookSnapshot ask_only_snap = make_snapshot(3000, std::numeric_limits<int64_t>::min(), 25010, 0, 50);
+    ask_only_snap.best_bid = std::numeric_limits<int64_t>::min();
+    pipeline.update(ask_only_snap, -10);
+
+    const auto feats_ask_only = observe(pipeline);
+    float ask_vals[mm::MarketFeatures::DIM]{};
+    feats_ask_only.to_array(ask_vals);
+    for (float v : ask_vals) {
+        REQUIRE(std::isfinite(v));
+        REQUIRE(std::abs(v) <= 5.0f);
+    }
+    REQUIRE(feats_ask_only.spread_ticks == 0.0f);
+    REQUIRE(feats_ask_only.micro_price_offset == 0.0f);
+}

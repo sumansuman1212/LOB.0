@@ -97,3 +97,67 @@ TEST_CASE("TickReplayer: Gap detection > 1 second (Req 9.6)", "[replayer][gap]")
     REQUIRE(reported_prev == ts1);
     REQUIRE(reported_next == ts2);
 }
+
+TEST_CASE("SPSCQueue: Modular wraparound and boundary capacity", "[replayer][queue][wraparound]") {
+    mm::SPSCQueue<int, 4> q; // capacity 4: indices 0..3
+
+    REQUIRE(q.empty());
+    REQUIRE(q.size() == 0);
+
+    // Push 3 items (max capacity - 1 for power-of-two mask)
+    REQUIRE(q.push(10));
+    REQUIRE(q.push(20));
+    REQUIRE(q.push(30));
+    REQUIRE(q.size() == 3);
+    REQUIRE_FALSE(q.push(40)); // full
+
+    int val = 0;
+    REQUIRE(q.pop(val));
+    REQUIRE(val == 10);
+    REQUIRE(q.size() == 2);
+
+    REQUIRE(q.push(40));
+    REQUIRE(q.size() == 3);
+
+    // Pop remaining in exact FIFO order
+    REQUIRE(q.pop(val));
+    REQUIRE(val == 20);
+    REQUIRE(q.pop(val));
+    REQUIRE(val == 30);
+    REQUIRE(q.pop(val));
+    REQUIRE(val == 40);
+
+    REQUIRE(q.empty());
+    REQUIRE(q.size() == 0);
+}
+
+TEST_CASE("TickReplayer: Threaded mode SPSC invariant separation", "[replayer][threaded]") {
+    mm::TickReplayer replayer;
+
+    std::vector<mm::OrderEvent> events = {
+        {100, 1, 20000, 10, mm::OrderEvent::Type::Add, mm::Side::Bid, {0, 0}},
+        {200, 2, 20005, 10, mm::OrderEvent::Type::Add, mm::Side::Ask, {0, 0}},
+    };
+    replayer.load_events(std::move(events));
+    replayer.set_threaded_mode(true);
+    REQUIRE(replayer.is_threaded_mode());
+
+    // Initially queue is empty because pump_to_queue has not been called by producer thread
+    mm::OrderEvent ev{};
+    REQUIRE_FALSE(replayer.next_event(ev)); // MUST NOT pump synchronously!
+
+    // Producer pumps 1 event
+    REQUIRE(replayer.pump_to_queue(1) == 1);
+
+    // Consumer pops that 1 event
+    REQUIRE(replayer.next_event(ev));
+    REQUIRE(ev.order_id == 1);
+
+    // Queue empty again, consumer does not pump
+    REQUIRE_FALSE(replayer.next_event(ev));
+
+    // Producer pumps remaining event
+    REQUIRE(replayer.pump_to_queue(1) == 1);
+    REQUIRE(replayer.next_event(ev));
+    REQUIRE(ev.order_id == 2);
+}

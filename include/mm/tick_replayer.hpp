@@ -67,10 +67,12 @@ public:
         return head_.load(std::memory_order_relaxed) == tail_.load(std::memory_order_relaxed);
     }
 
+    /// Number of items currently queued.
+    /// Unsigned modular difference guarantees correct size across integer wraparound.
     size_t size() const noexcept {
         const size_t h = head_.load(std::memory_order_relaxed);
         const size_t t = tail_.load(std::memory_order_relaxed);
-        return (t >= h) ? (t - h) : 0;
+        return t - h;
     }
 
 private:
@@ -105,6 +107,11 @@ public:
     /// Total events loaded
     size_t total_events() const noexcept { return events_.size(); }
 
+    /// Enable decoupled multi-threaded mode where an ingestion thread calls pump_to_queue()
+    /// and the consumer thread strictly pops from the SPSC queue without synchronous pumping.
+    void set_threaded_mode(bool enable) noexcept { threaded_mode_.store(enable, std::memory_order_release); }
+    bool is_threaded_mode() const noexcept { return threaded_mode_.load(std::memory_order_acquire); }
+
     /// Register callback for data gaps > 1 second (1e9 ns) (Req 9.6)
     void on_gap(GapCallback cb) noexcept { gap_callback_ = std::move(cb); }
 
@@ -117,6 +124,7 @@ private:
     int64_t last_timestamp_ns_{0};
     SPSCQueue<OrderEvent, 65536> queue_;
     GapCallback gap_callback_;
+    std::atomic<bool> threaded_mode_{false};
 };
 
 } // namespace mm

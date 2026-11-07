@@ -60,7 +60,12 @@ bool TickReplayer::next_event(OrderEvent& out_event) noexcept {
         return true;
     }
 
-    // If queue is empty but more events exist in dataset, pump synchronously
+    // In threaded mode, consumer NEVER pumps into the SPSC queue, preserving the Single-Producer invariant.
+    if (threaded_mode_.load(std::memory_order_acquire)) {
+        return false;
+    }
+
+    // Synchronous single-threaded fallback: pump on-demand
     if (cursor_ < events_.size()) {
         pump_to_queue(256);
         return queue_.pop(out_event);
@@ -70,6 +75,9 @@ bool TickReplayer::next_event(OrderEvent& out_event) noexcept {
 }
 
 bool TickReplayer::has_events() const noexcept {
+    if (threaded_mode_.load(std::memory_order_acquire)) {
+        return !queue_.empty() || (cursor_ < events_.size());
+    }
     return (cursor_ < events_.size()) || !queue_.empty();
 }
 
