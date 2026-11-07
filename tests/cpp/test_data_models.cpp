@@ -20,3 +20,10 @@ TEST_CASE("data-model binary layout and reward invariants", "[data-models][task-
         REQUIRE(output[i] == static_cast<float>(i + 1));
     }
 }
+
+int main(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
+    return CatchShim::run_all_tests();
+}
+
