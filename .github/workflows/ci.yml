@@ -87,8 +87,8 @@ jobs:
 
       - name: Run Standalone C++ Tests
         run: |
-          ./build-standalone/tests/mm_tests
-          ./build-standalone/src/cpp/verify_native_inference
+          ./build-standalone/mm_tests
+          ./build-standalone/verify_native_inference
 
       - name: Setup Linux CPU LibTorch
         run: |
@@ -107,8 +107,8 @@ jobs:
       - name: Run Native Inference Verification with TorchScript Model
         run: |
           export LD_LIBRARY_PATH="/opt/libtorch/lib:${LD_LIBRARY_PATH}"
-          ./build-torch/tests/mm_tests
-          ./build-torch/src/cpp/verify_native_inference
+          ./build-torch/mm_tests
+          ./build-torch/verify_native_inference
 
   cpp-build-windows:
     name: C++17 Core Build & Tests (Windows MSVC)
@@ -130,5 +130,5 @@ jobs:
 
       - name: Execute C++ test suite
         run: |
-          .\build\tests\Release\mm_tests.exe
-          .\build\src\cpp\Release\verify_native_inference.exe
+          .\build\Release\mm_tests.exe
+          .\build\Release\verify_native_inference.exe
