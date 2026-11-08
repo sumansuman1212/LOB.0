@@ -104,20 +104,22 @@ TEST_CASE("SPSCQueue: Modular wraparound and boundary capacity", "[replayer][que
     REQUIRE(q.empty());
     REQUIRE(q.size() == 0);
 
-    // Push 3 items (max capacity - 1 for power-of-two mask)
+    // Push 4 items (fills exact capacity 4)
     REQUIRE(q.push(10));
     REQUIRE(q.push(20));
     REQUIRE(q.push(30));
-    REQUIRE(q.size() == 3);
-    REQUIRE_FALSE(q.push(40)); // full
+    REQUIRE(q.push(40));
+    REQUIRE(q.size() == 4);
+    REQUIRE_FALSE(q.push(50)); // full
 
     int val = 0;
     REQUIRE(q.pop(val));
     REQUIRE(val == 10);
-    REQUIRE(q.size() == 2);
-
-    REQUIRE(q.push(40));
     REQUIRE(q.size() == 3);
+
+    REQUIRE(q.push(50));
+    REQUIRE(q.size() == 4);
+    REQUIRE_FALSE(q.push(60)); // full again
 
     // Pop remaining in exact FIFO order
     REQUIRE(q.pop(val));
@@ -126,6 +128,8 @@ TEST_CASE("SPSCQueue: Modular wraparound and boundary capacity", "[replayer][que
     REQUIRE(val == 30);
     REQUIRE(q.pop(val));
     REQUIRE(val == 40);
+    REQUIRE(q.pop(val));
+    REQUIRE(val == 50);
 
     REQUIRE(q.empty());
     REQUIRE(q.size() == 0);

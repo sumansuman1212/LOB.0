@@ -82,9 +82,12 @@ if(Torch_FOUND)
   target_include_directories(mm_core PUBLIC ${TORCH_INCLUDE_DIRS})
 endif()
 
-# On MSVC set /EHsc required by C++ exceptions
+# ---------------------------------------------------------------------------
+# Global compiler warnings & MSVC exception unwinding
+# ---------------------------------------------------------------------------
 if(MSVC)
-  target_compile_options(mm_core PRIVATE /EHsc /W4)
+  add_compile_options(/EHsc /W4)
+  add_compile_definitions(NOMINMAX)
 else()
-  target_compile_options(mm_core PRIVATE -Wall -Wextra)
+  add_compile_options(-Wall -Wextra)
 endif()
