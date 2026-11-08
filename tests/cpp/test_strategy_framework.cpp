@@ -42,15 +42,14 @@ TEST_CASE("StrategyFramework: One quote per state-changing event (Property 19, R
 }
 
 TEST_CASE("StrategyFramework: Inventory bound invariant (Property 20, Req 7.5)", "[strategy][inventory]") {
-    mm::StrategyConfig cfg{
-        .instrument_id = "NSE_TEST",
-        .model_path = "",
-        .max_position = 100,
-        .max_order_size = 50,
-        .tick_size = 5,
-        .latency_budget_ns = 800,
-        .inventory_penalty = 0.1f
-    };
+    mm::StrategyConfig cfg;
+    cfg.instrument_id = "NSE_TEST";
+    cfg.model_path = "";
+    cfg.max_position = 100;
+    cfg.max_order_size = 50;
+    cfg.tick_size = 5;
+    cfg.latency_budget_ns = 800;
+    cfg.inventory_penalty = 0.1f;
 
     mm::StrategyFramework strategy(cfg);
 

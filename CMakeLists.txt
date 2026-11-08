@@ -86,7 +86,7 @@ endif()
 # Global compiler warnings & MSVC exception unwinding
 # ---------------------------------------------------------------------------
 if(MSVC)
-  add_compile_options(/EHsc /W4)
+  add_compile_options(/EHsc /W4 /wd4324)
   add_compile_definitions(NOMINMAX)
 else()
   add_compile_options(-Wall -Wextra)
